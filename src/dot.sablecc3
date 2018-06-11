@@ -1,0 +1,112 @@
+Package dot;
+
+////////////////////////////////////////////////////////////////////////////////
+
+Helpers
+
+  // aka the section I'm glad was Googleable
+
+  tab                     = 9;
+  cr                      = 13;
+  lf                      = 10;
+  digit                   = ['0'..'9'];
+  digit_sequence          = digit+;
+  number                  = digit_sequence? '.' digit_sequence | digit_sequence '.' | digit;
+  quote                   = '"';
+  lowercase               = ['a'..'z'];
+  uppercase               = ['A'..'Z'];
+  letter                  = lowercase | uppercase;
+  idletter                = letter | '_';
+  idchar                  = letter | '_' | '\' | number;
+  string_char             = letter | '_' | '\' | number | ' ';
+  string                  = quote string_char* quote;
+  all                     = [0..0xffff];
+  not_cr_lf               = [all - [cr + lf]];
+  not_star                = [all - '*'];
+  not_star_slash          = [not_star - '/'];
+  eol                     = cr | lf | cr lf;
+  short_comment           = '//' not_cr_lf* eol;
+  long_comment            = '/*' not_star* '*'+ (not_star_slash not_star* '*'+)* '/';
+  semicolon               = ';';
+  comma                   = ',';
+  graph                   = 'graph';
+  node                    = 'node';
+  edge                    = 'edge';
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+Tokens
+
+  // These are ripped directly from the Lexer
+
+  equals                  = '=';
+  semicolon               = ';';
+  comma                   = ',';
+  l_cb                    = '{';
+  r_cb                    = '}';
+  l_br                    = '[';
+  r_br                    = ']';
+
+  directed_edge           = '->';
+  undirected_edge         = '--';
+  strict                  = 'strict';
+  digraph                 = 'digraph';
+  graph                   = 'graph';
+  subgraph                = 'subgraph';
+
+  comment                 = short_comment | long_comment;
+
+  eol                     = eol;
+  blank                   = (' ' | tab | eol)+;
+  id                      = idchar* | string;
+  type                    = graph | node | edge;
+
+////////////////////////////////////////////////////////////////////////////////
+
+Ignored Tokens
+
+  // The less said here the better
+
+  blank, eol, comment, semicolon;
+
+////////////////////////////////////////////////////////////////////////////////
+
+Productions
+
+// These are the Productions that actually produce something
+
+
+graph
+  {-> create_graph}       =  T.strict? graph_type [name]:T.id l_cb statement_list r_cb
+                                {-> New create_graph(name)};
+
+edge_stmt
+  {-> create_pc_nodes}    = [parent]:T.id edgeop [child]:T.id attribute_list?
+                              {-> New create_pc_nodes(parent, child)};
+
+node_stmt
+  {-> create_node}        = [name]:T.id attribute_list?
+                            {-> New create_node(name)};
+
+graph_type                = {d} T.digraph
+                          | {u} T.graph;
+
+id                        = T.id;
+
+statement_list            = statement statement_list?;
+
+edgeop                    = {d} directed_edge
+                          | {u} undirected_edge;
+
+statement                 = {node} node_stmt
+                          | {edge} edge_stmt
+                          | {attr} type attribute_list;
+
+attribute_list            = l_br assignment_list? r_br;
+
+assignment_list           = assignment
+                          | {list} assignment comma assignment_list;
+
+assignment                = [left]:P.id equals [right]:P.id;
+
