@@ -4,7 +4,7 @@ Package dot;
 
 Helpers
 
-  // aka the section I'm glad was Googleable
+  
 
   tab                     = 9;
   cr                      = 13;
@@ -110,3 +110,10 @@ assignment_list           = assignment
 
 assignment                = [left]:P.id equals [right]:P.id;
 
+////////////////////////////////////////////////////////////////////////////////
+
+Abstract Syntax Tree
+
+create_graph              = [name]:id;
+create_node               = [name]:id;
+create_pc_nodes           = [parent]:id [child]:id;
